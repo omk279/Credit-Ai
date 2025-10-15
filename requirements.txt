@@ -1,0 +1,8 @@
+Flask
+PyMuPDF
+Pillow
+pytesseract
+python-dotenv
+fpdf2
+openpyxl
+gunicorn

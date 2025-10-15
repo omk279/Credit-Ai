@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit-AI Statement Parser</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* New Moving Gradient Background */
+            background: linear-gradient(-45deg, #afffffff, #2f5a75ff, #8ea7b0ff, #1b5772ff);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow: hidden; /* Hide overflow from animations */
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .drag-over {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .progress-bar-inner.indeterminate {
+            width: 100%;
+            background-image: linear-gradient(45deg, rgba(255, 255, 255, .15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+        @keyframes progress-bar-stripes {
+            from { background-position: 1rem 0; }
+            to { background-position: 0 0; }
+        }
+        .progress-bar-inner {
+            transition: width 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .results-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <!-- Restored Navbar -->
+    <nav class="bg-white/50 backdrop-blur-md shadow-sm fixed w-full top-0 z-50">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <svg class="h-8 w-8 mr-2 text-blue-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/><path d="M12.5 7.5H9.5V16.5H12.5V13.5H15.5V10.5H12.5V7.5Z" fill="currentColor"/></svg>
+                    <span class="text-xl font-bold text-gray-800">Credit-AI</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">Dashboard</a>
+                    <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">About</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 max-w-2xl mt-16">
+        <div class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl shadow-gray-300/30 p-8">
+            <div class="flex items-center justify-center mb-6">
+                 <h1 class="text-3xl font-bold text-gray-800 text-center">Statement Parser</h1>
+            </div>
+            <p class="text-gray-500 mb-8 text-center">Securely parse your credit card statements in seconds.</p>
+
+            <div id="upload-area">
+                <form id="upload-form">
+                    <div class="mb-4">
+                        <label for="bank-select" class="block text-sm font-medium text-gray-700 mb-1">Select Bank (Optional)</label>
+                        <select id="bank-select" name="bank" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="Auto-Detect">Auto-Detect</option>
+                            <option value="HDFC Bank">HDFC Bank</option>
+                            <option value="ICICI Bank">ICICI Bank</option>
+                            <option value="SBI">SBI Card</option>
+                            <option value="IDFC FIRST Bank">IDFC FIRST Bank</option>
+                            <option value="American Express">American Express</option>
+                        </select>
+                    </div>
+                    <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-colors duration-300 ease-in-out">
+                        <label for="statement-upload" class="cursor-pointer flex flex-col items-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" /></svg>
+                            <span class="mt-4 text-lg font-medium text-gray-700">Drop your statement here or <span class="text-blue-600">browse</span></span>
+                            <span class="mt-1 block text-xs text-gray-500">PDF only, up to 10MB</span>
+                        </label>
+                        <input id="statement-upload" name="statement" type="file" class="sr-only" accept=".pdf">
+                    </div>
+                </form>
+            </div>
+            
+            <div id="progress-area" class="hidden w-full mt-6"></div>
+            <div id="error-message" class="hidden p-4 mt-6 text-sm text-red-800 bg-red-100 rounded-lg" role="alert"></div>
+            
+            <div id="results-section" class="hidden mt-8">
+                 <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">Extracted Information</h2>
+                <div id="results-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+                <div class="mt-8 flex justify-center items-center">
+                    <button id="download-pdf-button" class="bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 inline-flex items-center">
+                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        Download PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('statement-upload');
+        const bankSelect = document.getElementById('bank-select');
+        const uploadArea = document.getElementById('upload-area');
+        const progressArea = document.getElementById('progress-area');
+        const resultsSection = document.getElementById('results-section');
+        const resultsGrid = document.getElementById('results-grid');
+        const errorMessage = document.getElementById('error-message');
+        const downloadPdfButton = document.getElementById('download-pdf-button');
+        
+        let currentFile = null;
+        let lastResults = {};
+
+        // --- Event Listeners ---
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('drag-over'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            handleFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', () => { if (fileInput.files.length > 0) handleFile(fileInput.files[0]); });
+        downloadPdfButton.addEventListener('click', downloadPdf);
+
+        function handleFile(file) {
+            if (!file || file.type !== 'application/pdf') return showError("Please select a valid PDF file.");
+            if (file.size > 10 * 1024 * 1024) return showError("File size cannot exceed 10MB.");
+            currentFile = file;
+            
+            uploadArea.classList.add('hidden');
+            progressArea.innerHTML = `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center">
+                    <svg class="h-8 w-8 text-red-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                    <div class="flex-grow ml-4">
+                        <div class="flex justify-between items-center">
+                            <span id="file-name" class="text-sm font-medium text-gray-800 truncate"></span>
+                            <span id="progress-status" class="text-sm font-medium text-gray-600">Ready</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mt-1 overflow-hidden">
+                            <div id="progress-bar-inner" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                     <button id="action-button" class="ml-4 text-gray-500 hover:text-red-600 transition-colors">
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <button id="parse-button" type="button" class="w-full mt-4 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400" disabled>Parse Statement</button>
+            `;
+            progressArea.classList.remove('hidden');
+
+            // Attach event listeners to newly created elements
+            document.getElementById('action-button').addEventListener('click', resetUI);
+            document.getElementById('parse-button').addEventListener('click', uploadAndParseFile);
+
+            // Update UI elements
+            document.getElementById('file-name').textContent = file.name;
+            const progressBarInner = document.getElementById('progress-bar-inner');
+            const progressStatus = document.getElementById('progress-status');
+            
+            // Simulate "Ready" state
+            progressStatus.textContent = 'Preparing...';
+            progressBarInner.style.width = '50%';
+            setTimeout(() => {
+                progressBarInner.style.width = '100%';
+                progressStatus.textContent = 'Ready';
+                document.getElementById('parse-button').disabled = false;
+            }, 500);
+
+            errorMessage.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+        }
+
+        function uploadAndParseFile() {
+            if (!currentFile) return;
+            
+            const parseButton = document.getElementById('parse-button');
+            const progressBarInner = document.getElementById('progress-bar-inner');
+            const progressStatus = document.getElementById('progress-status');
+
+            parseButton.disabled = true;
+            parseButton.textContent = "Processing...";
+            progressBarInner.style.width = '0%';
+            progressBarInner.classList.remove('bg-green-500');
+            progressBarInner.classList.add('bg-blue-600');
+
+            const formData = new FormData();
+            formData.append('statement', currentFile);
+            formData.append('bank', bankSelect.value);
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    progressBarInner.style.width = percentComplete + '%';
+                    progressStatus.textContent = `Uploading... ${percentComplete}%`;
+                }
+            });
+
+            xhr.upload.addEventListener('load', () => {
+                progressStatus.textContent = 'Processing with AI...';
+                progressBarInner.classList.add('indeterminate');
+            });
+
+            xhr.addEventListener('load', () => {
+                progressBarInner.classList.remove('indeterminate');
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        if (result.error) throw new Error(result.error);
+                        lastResults = result;
+                        displayResults(result);
+                        progressArea.classList.add('hidden'); // Hide progress on success
+                    } catch (e) { showError(e.message || 'Failed to parse server response.'); resetUI(); }
+                } else {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        showError(result.error || `Server responded with status ${xhr.status}`);
+                    } catch (e) { showError(`Server responded with status ${xhr.status}`); }
+                    resetUI();
+                }
+            });
+
+            xhr.addEventListener('error', () => { showError('A network error occurred.'); resetUI(); });
+
+            xhr.send(formData);
+        }
+
+        async function downloadPdf() {
+            try {
+                const response = await fetch('/download_pdf', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(lastResults)
+                });
+                if (!response.ok) throw new Error('Download failed.');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'statement_results.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (error) { showError(error.message); }
+        }
+
+        function displayResults(data) {
+            resultsGrid.innerHTML = '';
+            const fields = [
+                { title: 'Card Provider', value: data.card_provider },
+                { title: 'Total Balance Due', value: data.total_balance ? `$${data.total_balance}` : '-' },
+                { title: 'Payment Due Date', value: data.payment_due_date },
+                { title: 'Card (Last 4)', value: data.card_last_4 },
+                { title: 'Billing Period', value: data.billing_period, fullWidth: true },
+            ];
+            fields.forEach(field => {
+                const card = document.createElement('div');
+                card.className = `bg-gray-50/50 p-5 rounded-xl border border-gray-200/80 ${field.fullWidth ? 'md:col-span-2' : ''}`;
+                card.innerHTML = `<p class="text-sm font-medium text-gray-500">${field.title}</p><p class="text-lg font-semibold text-gray-900">${field.value || '-'}</p>`;
+                resultsGrid.appendChild(card);
+            });
+            resultsSection.classList.remove('hidden');
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+
+        function resetUI() {
+            currentFile = null; lastResults = {}; fileInput.value = '';
+            uploadArea.classList.remove('hidden');
+            progressArea.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+
